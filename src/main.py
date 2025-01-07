@@ -1,28 +1,49 @@
-from src.pipeline import parse, extract, dataset, clean_data, preprocess, TTS, t_model,e_model
+import json
+import pandas as pd
+from pipeline import parse, extract, dataset, clean_data, preprocess, TTS, feature_reduction, t_model, e_model
 
 def main():
-    path = "algoparams_from_ui.json.json"  
-    config = parse(path)
-    details = extract(config) 
+    # Load 
+    config_path = "algoparams_from_ui.json.json"  
+    data_path = "data/iris.csv"  
+
+    config = parse(config_path)
+    extracted = extract(config)
     
-    data = "data/iris.csv"
-    df = dataset(data)
+    # Extract parameters 
+    target = extracted["target"]
+    prediction_type = extracted["prediction_type"]
+    feature_handling = extracted["feature_handling"]
+    sel_algorithm = extracted["sel_algorithm"]
+
+    # Load and clean dataset
+    df = dataset(data_path)
+    print("Dataset Loaded:\n", df.head())
+    print("\nDataset shape:\n", df.shape)
+    
     df = clean_data(df)
-    features, target = preprocess(df, details["target"])
+
+    # Preprocess the dataset
+    features, target_data = preprocess(df, target)
+    print(f"Features shape: {features.shape}")
     
-    X_train, X_test, y_train, y_test = TTS(features, target)
-    model = t_model(details["sel_algorithm"], X_train, y_train)
-    result = e_model(model, X_test, y_test)
-    
-    print("Model Evaluation Results:", result)
-    
-    #print("Target Variable:", details["target"])
-    #print("Prediction Type:", details["prediction_type"])
-    #print("Feature Handling Instructions:", details["feature_handling"])
-    #print("Selected Algorithms:", details["sel_algorithm"])
-     
-    #print("Sample Dataset of iris\n",df.head(5))
-    #print("Missing values in iris dataset",df.isnull().sum().sum())
-    
+    # Apply feature reduction 
+    if "reduction_method" in feature_handling:
+        features = feature_reduction(features, feature_handling["reduction_method"], target_data)
+
+    # Split data
+    X_train, X_test, y_train, y_test = TTS(features, target_data)
+
+    # Train models 
+    trained_models = t_model(sel_algorithm, X_train, y_train)
+
+    # Evaluate models 
+    results = e_model(trained_models, X_test, y_test)
+
+    # Print the results
+    print("\nModel Evaluation Results")
+    for model_name, predictions in results.items():
+        print(f"{model_name}: {predictions}")
+
 if __name__ == "__main__":
     main()
