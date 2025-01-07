@@ -47,7 +47,6 @@ The `main.py` script is the mastermind behind everything. Here’s what it does:
 1. **Configuration Reading**: It loads the magic from `algoparams_from_ui.json`, adjusting settings and model choices based on what you want to achieve.
 2. **Model Selection**: Depending on the `prediction_type` (regression or classification), it picks the right model for you. No more guessing—let the system choose!
 3. **Model Training**: GridSearchCV goes to work, tuning the model’s hyperparameters to perfection.
-4. **Model Evaluation**: Get key metrics like accuracy, RMSE, and R² right at your fingertips. You'll know exactly how well your model is performing and where to tweak it.
 
 ### **⚖️ Model Evaluation Metrics**
 Performance matters, and we don’t leave you hanging. The evaluation process includes:
