@@ -82,18 +82,14 @@ The pipeline evaluates each model's performance and logs the results:
 ---
 
 ## **📊 Areas for Improvement and Future Work**
-
-### **1. Model Handling Based on `prediction_type`**:
-The pipeline currently allows for both regression and classification models, but it doesn't dynamically check the `prediction_type` when selecting models. Future improvements will include:
-- **Automatic Model Selection**: Only train regression models (e.g., `LinearRegression`, `RandomForestRegressor`) for regression tasks and classification models (e.g., `RandomForestClassifier`, `LogisticRegression`) for classification tasks.
   
-### **2. Tree-Based Feature Reduction**:
+### **1. Tree-Based Feature Reduction**:
 Currently, feature reduction is implemented using **PCA** and **Correlation with Target**. However, **Tree-based feature importance** (using models like Random Forest) could be added to enhance feature selection by identifying important features based on model performance.
 
-### **3. Logging Standard Metrics**:
+### **2. Logging Standard Metrics**:
 The pipeline logs predictions but does not log evaluation metrics like **accuracy**, **RMSE**, **R²**, etc. In the next iteration, we will integrate **sklearn.metrics** (e.g., `accuracy_score`, `mean_squared_error`, `r2_score`) to track model performance more comprehensively.
 
-### **4. Fully Integrated Pipelines**:
+### **3. Fully Integrated Pipelines**:
 Currently, we are using **sklearn pipelines** for preprocessing, but we can enhance this further:
 - **Modular Pipelines**: Fully integrate data preprocessing, feature handling, feature reduction, and model training into a single pipeline. This would allow for better manageability and reusability.
 
