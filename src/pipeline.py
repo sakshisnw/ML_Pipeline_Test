@@ -11,19 +11,43 @@ from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest
 
 def parse(path):
-    with open(path, 'r') as f:
-        config = json.load(f)
+    with open(path, 'r') as file:
+        config = json.load(file)
+    
+    # Define expected keys
+    required_keys = ['target', 'prediction_type', 'feature_handling', 'algorithms']
+    
+    missing_keys = [key for key in required_keys if key not in config["design_state_data"]]
+    
+    if missing_keys:
+        print(f"Warning: Missing required keys in JSON: {missing_keys}")
+        for key in missing_keys:
+            if key == 'target':
+                config["design_state_data"][key] = {}  
+            elif key == 'prediction_type':
+                config["design_state_data"][key] = "Regression" 
+            elif key == 'feature_handling':
+                config["design_state_data"][key] = {}  
+            elif key == 'models':
+                config["design_state_data"][key] = []  
+    
     return config
 
-def extract(config):
-    target = config["design_state_data"]["target"]["target"]
-    prediction_type = config["design_state_data"]["target"]["prediction_type"]
-    feature_handling = config["design_state_data"]["feature_handling"]
 
-    sel_algorithm = {}
-    for k, v in config["design_state_data"]["algorithms"].items():
-        if v["is_selected"]:
-            sel_algorithm[k] = v
+def extract(config):
+    try:
+        target = config["design_state_data"]["target"]["target"]
+        prediction_type = config["design_state_data"]["target"]["prediction_type"]
+        feature_handling = config["design_state_data"]["feature_handling"]
+
+        sel_algorithm = {}
+        for k, v in config["design_state_data"]["algorithms"].items():
+            if v.get("is_selected", False):
+                sel_algorithm[k] = v
+
+    except KeyError as e:
+        print(f"Warning: Missing key {e} in the configuration, skipping it.")
+        target, prediction_type, feature_handling, sel_algorithm = None, "Classification", {}, {}
 
     return {
         "target": target,
@@ -32,13 +56,17 @@ def extract(config):
         "sel_algorithm": sel_algorithm,
     }
 
+
 def dataset(data):
     return pd.read_csv(data)
 
+
 def clean_data(df):
+    # Check and handle missing values
     if df.isnull().sum().sum() > 0:
-        df = df.dropna()
+        df = df.dropna()  # Dropping rows with missing values
     return df
+
 
 def preprocess(df, target):
     features = df.drop(columns=[target])
@@ -59,8 +87,10 @@ def preprocess(df, target):
 
     return features, t_val
 
+
 def TTS(features, target):
     return train_test_split(features, target, random_state=40, test_size=0.2)
+
 
 def feature_reduction(features, method, target=None):
     if method == "PCA":
@@ -70,7 +100,15 @@ def feature_reduction(features, method, target=None):
         if target is not None:
             selector = SelectKBest(k=min(features.shape[1], 5))
             features = selector.fit_transform(features, target)
+    elif method == "Tree-based":
+        if target is not None:
+            rf_selector = RandomForestRegressor(n_estimators=100)
+            rf_selector.fit(features, target)
+            importances = rf_selector.feature_importances_
+            indices = importances.argsort()[-5:][::-1]
+            features = features.iloc[:, indices]
     return features
+
 
 def t_model(m_config, X_train, y_train):
     trained_models = {}
@@ -93,12 +131,14 @@ def t_model(m_config, X_train, y_train):
 
     return trained_models
 
+
 def e_model(models, X_test, y_test):
     result = {}
     for m_name, model in models.items():
         pred = model.predict(X_test)
         result[m_name] = pred
     return result
+
 
 def create_pipeline(nf, cf):
     num_tran = Pipeline(steps=[
@@ -119,4 +159,4 @@ def create_pipeline(nf, cf):
         ('preprocessor', preprocessor),
         ('model', RandomForestClassifier(random_state=42))
     ])
-    return pipeline 
+    return pipeline

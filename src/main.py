@@ -5,8 +5,9 @@ from pipeline import parse, extract, dataset, clean_data, preprocess, TTS, featu
 def main():
     # Load 
     config_path = "algoparams_from_ui.json.json"  
-    data_path = "data/iris.csv"  
+    data_path = "data/iris.csv" 
 
+    # Parse the JSON config
     config = parse(config_path)
     extracted = extract(config)
     
